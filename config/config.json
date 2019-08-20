@@ -1,0 +1,20 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "reusable-list-form-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/reusableListForm/ReusableListFormWebPart.js",
+          "manifest": "./src/webparts/reusableListForm/ReusableListFormWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "ReusableListFormWebPartStrings": "lib/webparts/reusableListForm/loc/{locale}.js",
+    "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
+    "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
+  }
+}
