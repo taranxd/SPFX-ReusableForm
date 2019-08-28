@@ -33,6 +33,7 @@ export default class SPTaxonomyField extends React.Component<ISPTaxonomyFieldPro
           .split('#')[1]
           .trim(),
       });
+      this.onTaxPickerChange(initialTerms);
     }
     defaultTerm = this.props.fieldSchema.DefaultValue.split('|')[1];
     this.state = {
@@ -48,7 +49,7 @@ export default class SPTaxonomyField extends React.Component<ISPTaxonomyFieldPro
         panelTitle={this.props.panelTitle ? this.props.panelTitle : 'Select Terms'}
         label={this.props.label ? this.props.label : ''}
         context={this.props.context}
-        onChange={this.props.onChange ? this.props.onChange : this.onTaxPickerChange}
+        onChange={this.onTaxPickerChange}
         isTermSetSelectable={false}
         initialValues={this.state.selectedTerms}
         //required={this.props.fieldSchema.Required}
@@ -61,5 +62,10 @@ export default class SPTaxonomyField extends React.Component<ISPTaxonomyFieldPro
       //termKey: terms[0].key.toString()
     });
     console.log('Terms', terms);
+    let termKeys = [];
+    terms.map(term => {
+      termKeys.push(term.key);
+    });
+    this.props.onChange(terms, this.props.fieldSchema.Title);
   }
 }

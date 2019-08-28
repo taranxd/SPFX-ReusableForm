@@ -3,6 +3,7 @@ import styles from '../ReusableListForm.module.scss';
 import {Dropdown, IDropdownProps, IDropdownOption} from 'office-ui-fabric-react/lib/';
 import {IFieldSchema} from '../../../../common/services/datatypes/RenderListData';
 import {ControlMode} from '@pnp/sp';
+import {PropertyFieldMultiSelect} from '@pnp/spfx-property-controls/lib/PropertyFieldMultiSelect';
 
 export interface ISPChoiceFieldProps extends IDropdownProps {
   fieldSchema: IFieldSchema;
@@ -10,15 +11,17 @@ export interface ISPChoiceFieldProps extends IDropdownProps {
   onChange?: any;
   errorMessage?: any;
 }
-export interface ISPChoiceFieldFormState {
+export interface ISPMultiChoiceFieldFormState {
   options: IDropdownOption[];
   selectedOption: IDropdownOption;
+  multiSelect: string[];
 }
 
-export default class SPChoiceField extends React.Component<ISPChoiceFieldProps, ISPChoiceFieldFormState> {
+export default class SPMultiChoiceField extends React.Component<ISPChoiceFieldProps, ISPMultiChoiceFieldFormState> {
   constructor(props: ISPChoiceFieldProps) {
     super(props);
     let options: IDropdownOption[] = [];
+    let multiOptions = [];
     this.props.fieldSchema.Choices.forEach(choice => {
       options.push({key: choice, text: choice});
     });
@@ -26,11 +29,13 @@ export default class SPChoiceField extends React.Component<ISPChoiceFieldProps, 
     options.forEach(choice => {
       if (choice.key === this.props.fieldSchema.DefaultValue) {
         selectedOption = choice;
+        multiOptions.push(choice.key);
       }
     });
     this.state = {
       options: options,
       selectedOption: selectedOption,
+      multiSelect: multiOptions,
     };
   }
   public render(): React.ReactElement<ISPChoiceFieldProps> {

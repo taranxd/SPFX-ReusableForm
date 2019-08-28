@@ -101,6 +101,7 @@ export interface IFieldSchema {
   HiddenListInternalName: string;
   MultiUser?: boolean;
   LookupField?: string;
+  TypeAsString?: string;
 }
 
 export interface IFormSchema {

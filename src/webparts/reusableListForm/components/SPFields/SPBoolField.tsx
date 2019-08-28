@@ -17,9 +17,11 @@ export interface ISPBoolFieldFormState {
 export default class SPBoolField extends React.Component<ISPBoolFieldProps, ISPBoolFieldFormState> {
   constructor(props: ISPBoolFieldProps) {
     super(props);
+    let tempChecked = Boolean(JSON.parse(props.fieldSchema.DefaultValue));
     this.state = {
-      checked: Boolean(JSON.parse(props.fieldSchema.DefaultValue)),
+      checked: tempChecked,
     };
+    this._onChange(null, tempChecked);
   }
 
   public render(): React.ReactElement<ISPBoolFieldProps> {
@@ -48,6 +50,7 @@ export default class SPBoolField extends React.Component<ISPBoolFieldProps, ISPB
     this.setState({
       checked: chk,
     });
+    this.props.onChange(checked.toString(), this.props.fieldSchema.Title);
     console.log('This is the state:');
     console.log(this.state.checked);
   }

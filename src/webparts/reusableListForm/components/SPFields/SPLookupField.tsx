@@ -27,7 +27,7 @@ export default class SPLookupField extends React.Component<ISPLookup, ISPLookupF
       <ListItemPicker
         listId={this.props.listId}
         columnInternalName={this.props.columnInternalName}
-        itemLimit={1}
+        itemLimit={this.props.itemLimit}
         onSelectedItem={this.onSelectedItem}
         context={this.props.context}
         key={this.props.fieldSchema.InternalName}
@@ -41,6 +41,7 @@ export default class SPLookupField extends React.Component<ISPLookup, ISPLookupF
       selectedItems: items,
       //termKey: terms[0].key.toString()
     });
-    this.props.selectedItem(items, this.props.fieldSchema.InternalName);
+    console.log(this.props.fieldSchema.Title);
+    this.props.selectedItem(items, this.props.fieldSchema.Title);
   }
 }

@@ -33,6 +33,7 @@ import {
 interface IFieldRender {
   fieldSchema: IFieldSchema;
   fieldRenderer?: JSX.Element;
+  fieldValue?: any;
 }
 interface IReusableListFormState {
   isLoadingSchema: boolean;
@@ -47,6 +48,8 @@ interface IReusableListFormState {
   fieldErrors: {[fieldName: string]: string};
   showUnsupportedFields?: boolean;
   fieldRenderer?: IFieldRender[];
+  valueMap?: {[fieldTitle: string]: IFieldRender};
+  mmdValueMap?: {[fieldTitle: string]: IFieldRender};
 }
 
 export default class ReusableListForm extends React.Component<IReusableListFormProps, IReusableListFormState> {
@@ -62,6 +65,7 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
       errors: [],
       notifications: [],
       fieldErrors: {},
+      valueMap: {},
     };
     this.spService = new SPService();
   }
@@ -107,13 +111,25 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
   public componentDidMount(): void {
     this.readSchema(this.props.listId, this.props.formType).then(() => {
       // this.readData(this.props.listId, this.props.formType, this.props.id)
+      // this.createValueMap();
       console.log('Read Schema Completed');
+      // Inititalize Value Map
     });
   }
-  private func = () => {
-    console.log('This is my function');
+  private createValueMap = fieldSchema => {
+    let tempValueMap: {[fieldTitle: string]: IFieldRender} = {};
+    fieldSchema.map(field => {
+      let fr: IFieldRender = {fieldSchema: field};
+      fr.fieldValue = field.DefaultValue;
+      tempValueMap[field.Title] = fr;
+    });
+    // console.log(tempValueMap);
+    // this.setState({
+    //   ...this.state,
+    //   valueMap: tempValueMap,
+    // });
+    return tempValueMap;
   }
-
   // @autobind
   private async readSchema(listId: string, formType: ControlMode): Promise<void> {
     try {
@@ -128,9 +144,10 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
       }
       this.setState({...this.state, isLoadingSchema: true});
       const fieldsSchema = await this.spService.getAllFieldsOfList(listId);
+      let vmap = this.createValueMap(fieldsSchema);
       console.log('all fields are fetched');
       console.log(fieldsSchema);
-      this.setState({...this.state, isLoadingSchema: false, fieldsSchema});
+      this.setState({...this.state, valueMap: vmap, isLoadingSchema: false, fieldsSchema});
     } catch (error) {
       const errorText = `'Error: ': ${error}`;
       this.setState({
@@ -150,21 +167,25 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
               return this.renderField(field);
             })}
             <div className="ms-Grid-col ms-u-sm6 block" />
-            <div className="ms-Grid-col ms-u-sm2 block">
-              <PrimaryButton
-                text="Create Item"
-                onClick={() => {
-                  //this.validateForm();
-                }}
-              />
-            </div>
-            <div className="ms-Grid-col ms-u-sm2 block">
-              <DefaultButton
-                text="Cancel Item"
-                onClick={() => {
-                  //this.setState({});
-                }}
-              />
+            <div className={`ms-Grid-row ${styles.row}`}>
+              <div className="ms-Grid-col ms-u-sm2 block">
+                <DefaultButton
+                  text="Create Item"
+                  onClick={() => {
+                    this.validateForm();
+                  }}
+                />
+              </div>
+              <div className="ms-Grid-col ms-u-sm2 block">
+                <DefaultButton
+                  text="Cancel Item"
+                  onClick={() => {
+                    this.setState({
+                      valueMap: {},
+                    });
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -348,7 +369,7 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
     */
   private renderField(field) {
     return (
-      <div className={`ms-Grid-row ms-bgColor-neutralLight ms-fontColor-white ${styles.row}`}>
+      <div className={`ms-Grid-row ${styles.row}`}>
         <div className="ms-Grid-col ms-u-sm4 block">
           <label className="ms-Label">{field.Title}</label>
         </div>
@@ -356,23 +377,39 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
           {(() => {
             switch (field.TypeAsString) {
               case 'Text':
-                return <SPTextField fieldSchema={field} formMode={this.props.formType} />;
+                return (
+                  <SPTextField fieldSchema={field} onChange={this.handleFieldChange} formMode={this.props.formType} />
+                );
               case 'Number':
-                return <SPNumberField fieldSchema={field} formMode={this.props.formType} />;
+                return (
+                  <SPNumberField fieldSchema={field} onChange={this.handleFieldChange} formMode={this.props.formType} />
+                );
               case 'Currency':
-                return <SPNumberField fieldSchema={field} formMode={this.props.formType} />;
+                return (
+                  <SPNumberField fieldSchema={field} onChange={this.handleFieldChange} formMode={this.props.formType} />
+                );
               case 'Boolean':
-                return <SPBoolField fieldSchema={field} formMode={this.props.formType} />;
+                return (
+                  <SPBoolField fieldSchema={field} onChange={this.handleFieldChange} formMode={this.props.formType} />
+                );
               case 'Choice': {
                 let ddOptions = field.Choices.map(option => {
                   return {key: option, text: option};
                 });
-                return <SPChoiceField fieldSchema={field} formMode={this.props.formType} options={ddOptions} />;
+                return (
+                  <SPChoiceField
+                    fieldSchema={field}
+                    onChange={this.handleFieldChange}
+                    formMode={this.props.formType}
+                    options={ddOptions}
+                  />
+                );
               }
               case 'TaxonomyFieldType': {
                 return (
                   <SPTaxonomyField
                     fieldSchema={field}
+                    onChange={this.handleMMDFieldChange}
                     formMode={this.props.formType}
                     context={this.props.context}
                     panelTitle="Select Terms"
@@ -383,16 +420,25 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
               }
               case 'Note': {
                 if (field.RichText) {
-                  //return <SPMLTRichField fieldSchema={field} formMode={this.props.formType} />;
-                  return <SPMLTField fieldSchema={field} formMode={this.props.formType} />;
+                  return (
+                    <SPMLTRichField
+                      fieldSchema={field}
+                      onChange={this.handleFieldChange}
+                      formMode={this.props.formType}
+                    />
+                  );
+                } else {
+                  return (
+                    <SPMLTField fieldSchema={field} onChange={this.handleFieldChange} formMode={this.props.formType} />
+                  );
                 }
-                return <SPMLTField fieldSchema={field} formMode={this.props.formType} />;
               }
               case 'UserMulti': {
                 return (
                   <SPPeoplePickerField
                     context={this.props.context}
                     fieldSchema={field}
+                    onChange={this.handleUserFieldChange}
                     formMode={this.props.formType}
                     multiUser={true}
                   />
@@ -403,13 +449,21 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
                   <SPPeoplePickerField
                     context={this.props.context}
                     fieldSchema={field}
+                    onChange={this.handleUserFieldChange}
                     formMode={this.props.formType}
                     multiUser={false}
                   />
                 );
               }
               case 'DateTime': {
-                return <SPDateTimeField fieldSchema={field} formMode={this.props.formType} isDateOnly={true} />;
+                return (
+                  <SPDateTimeField
+                    fieldSchema={field}
+                    onChange={this.handleFieldChange}
+                    formMode={this.props.formType}
+                    isDateOnly={true}
+                  />
+                );
               }
               case 'Lookup': {
                 return (
@@ -420,6 +474,20 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
                     columnInternalName={field.LookupField}
                     listId={field.LookupList}
                     itemLimit={1}
+                    onSelectedItem={null}
+                    selectedItem={this.handleLookupChange}
+                  />
+                );
+              }
+              case 'LookupMulti': {
+                return (
+                  <SPLookupField
+                    fieldSchema={field}
+                    formMode={this.props.formType}
+                    context={this.props.context}
+                    columnInternalName={field.LookupField}
+                    listId={field.LookupList}
+                    itemLimit={100}
                     onSelectedItem={null}
                     selectedItem={this.handleLookupChange}
                   />
@@ -436,5 +504,133 @@ export default class ReusableListForm extends React.Component<IReusableListFormP
   private handleLookupChange = (val?, key?) => {
     console.log(`this is lookup handle change of key -> ${key}`);
     console.log(val);
+    let temp = this.state.valueMap;
+    if (val.length > 0) {
+      switch (temp[key].fieldSchema.TypeAsString) {
+        case 'Lookup': {
+          temp[key].fieldValue = val[0].key;
+          break;
+        }
+        case 'LookupMulti': {
+          temp[key].fieldValue = {
+            results: [], // allows multiple lookup value
+          };
+          val.map(v => {
+            temp[key].fieldValue.results.push(v.key);
+          });
+          break;
+        }
+      }
+    } else {
+      delete temp[key].fieldValue;
+    }
+    // temp[key].fieldValue = val[0].key;
+    this.setState({
+      ...this.state,
+      valueMap: temp,
+    });
+    console.log(this.state);
+  }
+  private handleFieldChange = (val?, key?) => {
+    console.log(`handleTextFieldChange: ${val} with key ${key}`);
+    let temp = this.state.valueMap;
+    temp[key].fieldValue = val;
+    this.setState({
+      ...this.state,
+      valueMap: temp,
+    });
+    console.log(this.state);
+  }
+  private handleMMDFieldChange = (val?, key?) => {
+    let temp = this.state.valueMap;
+    console.log(temp);
+    if (val.length > 0) {
+      val.map(term => {
+        temp[key].fieldValue = {
+          Label: term.name,
+          TermGuid: term.key,
+          WssId: '-1',
+        };
+      });
+    } else {
+      delete temp[key].fieldValue;
+    }
+    this.setState({
+      ...this.state,
+      valueMap: temp,
+    });
+    console.log(this.state);
+  }
+  private handleUserFieldChange = (val?, key?) => {
+    console.log(`this is User field handle change of key -> ${key}`);
+    console.log(val);
+    let temp = this.state.valueMap;
+    if (val.length > 0) {
+      switch (temp[key].fieldSchema.TypeAsString) {
+        case 'User': {
+          temp[key].fieldValue = val[0].id;
+          break;
+        }
+        case 'UserMulti': {
+          temp[key].fieldValue = {
+            results: [], // allows multiple lookup value
+          };
+          val.map(v => {
+            temp[key].fieldValue.results.push(v.id);
+          });
+          break;
+        }
+      }
+    } else {
+      delete temp[key].fieldValue;
+    }
+    // temp[key].fieldValue = val[0].key;
+    this.setState({
+      ...this.state,
+      valueMap: temp,
+    });
+    console.log(this.state);
+  }
+  private validateForm = () => {
+    // Put validate logic
+    this.submitForm();
+  }
+  private submitForm = () => {
+    let values = {};
+    const vals = Object.keys(this.state.valueMap).map(key => this.state.valueMap[key]);
+    vals.map(v => {
+      if (v.fieldValue) {
+        console.log('This is the type of my field as string:');
+        console.log(v.fieldSchema.TypeAsString);
+        let appendId: Boolean = false;
+        switch (v.fieldSchema.TypeAsString) {
+          case 'Lookup': {
+            appendId = true;
+            break;
+          }
+          case 'LookupMulti': {
+            appendId = true;
+            break;
+          }
+          case 'User': {
+            appendId = true;
+            break;
+          }
+          case 'UserMulti': {
+            appendId = true;
+            break;
+          }
+        }
+        console.log(`FieldVAlue: ${v.fieldSchema.InternalName}: `);
+        console.log(v.fieldValue);
+        if (v.fieldValue) {
+          if (appendId) values[v.fieldSchema.InternalName + 'Id'] = v.fieldValue;
+          else values[v.fieldSchema.InternalName] = v.fieldValue;
+        }
+      }
+    });
+    // values['Title'] = 'This is created by pnp';
+    console.log(values);
+    this.spService.createListItem(this.props.listId, values);
   }
 }

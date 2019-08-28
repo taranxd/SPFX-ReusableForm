@@ -23,44 +23,40 @@ export interface ISPDateTimeFieldFormState {
 export default class SPDateTimeField extends React.Component<ISPDateTimeFieldProps, ISPDateTimeFieldFormState> {
   constructor(props: ISPDateTimeFieldProps) {
     super(props);
-    // let defaultTerm = '';
-    // let initialTerms: IPickerTerms = [];
-    // if (this.props.fieldSchema.DefaultValue.indexOf('|') > -1) {
-    //   defaultTerm = this.props.fieldSchema.DefaultValue.split('|')[1].trim();
-    //   initialTerms.push({
-    //     key: defaultTerm,
-    //     name: this.props.fieldSchema.DefaultValue.split('|')[0]
-    //       .split('#')[1]
-    //       .trim(),
-    //     termSet: this.props.fieldSchema.TermSetId,
-    //     path: this.props.fieldSchema.DefaultValue.split('|')[0]
-    //       .split('#')[1]
-    //       .trim(),
-    //   });
-    // }
-    // defaultTerm = this.props.fieldSchema.DefaultValue.split('|')[1];
+    if (this.props.fieldSchema.DefaultValue === '[today]') {
+      this.props.fieldSchema.DefaultValue = Date();
+    }
+    let tempSelectedDate = this.props.fieldSchema.DefaultValue ? new Date(this.props.fieldSchema.DefaultValue) : null;
     this.state = {
-      selectedDate: this.props.fieldSchema.DefaultValue ? new Date(this.props.fieldSchema.DefaultValue) : null,
+      selectedDate: tempSelectedDate,
     };
+    if (this.props.fieldSchema.DefaultValue) {
+      this.handleChange(tempSelectedDate);
+    }
   }
   public render(): React.ReactElement<ISPDateTimeFieldProps> {
     return (
       <DateTimePicker
-        label=""
+        label=" "
         dateConvention={this.props.isDateOnly ? DateConvention.Date : DateConvention.DateTime}
         timeConvention={TimeConvention.Hours12}
         value={this.state.selectedDate ? this.state.selectedDate : null}
         onChange={this.handleChange}
         key={this.props.fieldSchema.InternalName}
+        showGoToToday={true}
       />
     );
   }
   private handleChange = value => {
+    console.log(`This is dateony: ${this.props.isDateOnly}`);
     console.log(value);
-    // this.setState({
-    //   selectedTerms: terms,
-    //   //termKey: terms[0].key.toString()
-    // });
-    // console.log('Terms', terms);
+    this.props.onChange(
+      `${new Date(value).getMonth() + 1}/${new Date(value).getDate()}/${new Date(value).getFullYear()}`,
+      this.props.fieldSchema.Title
+    );
+    console.log(`${new Date(value).getMonth() + 1}/${new Date(value).getDate()}/${new Date(value).getFullYear()}`);
+    this.setState({
+      selectedDate: value,
+    });
   }
 }

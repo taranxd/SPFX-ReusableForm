@@ -13,7 +13,7 @@
     @include ms-Grid-row;
     @include ms-fontColor-white;
     background-color: $ms-color-themeDark;
-    padding: 20px;
+    padding: 10px;
   }
 
   .column {
@@ -95,7 +95,12 @@
   .customFont {
     font-size: 11px;
   }
-
+  .richMLT {
+    border-style: solid;
+    border-width: thin;
+    width: 200px;
+    background-color: white;
+  }
   // .container {
   //   max-width: 700px;
   //   margin: 0px auto;

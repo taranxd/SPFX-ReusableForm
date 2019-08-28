@@ -4,7 +4,7 @@ import {ISPHttpClientOptions, SPHttpClient, SPHttpClientResponse} from '@microso
 import {ControlMode} from '../datatypes/ControlMode';
 import {IFieldSchema, RenderListDataOptions} from './datatypes/RenderListData';
 import {ISPService} from './ISPService';
-import {sp} from '@pnp/sp';
+import {sp, ItemAddResult} from '@pnp/sp';
 import {SPField} from '@microsoft/sp-page-context';
 
 export class SPService {
@@ -15,7 +15,8 @@ export class SPService {
       let web = sp.web;
       let fields: IFieldSchema[] = [];
       console.log(web.lists.getById(listId).views);
-      const filter2 = `Hidden eq false and CanBeDeleted eq true and ReadOnlyField eq false`;
+      // and CanBeDeleted eq true
+      const filter2 = `Hidden eq false and ReadOnlyField eq false`;
       web.lists
         .getById(listId)
         .fields.filter(filter2)
@@ -23,7 +24,7 @@ export class SPService {
         .then(f => {
           f = f.filter(field => {
             console.log(field);
-            if (field.Hidden == false) {
+            if (field.Hidden == false && field.Title !== 'Content Type' && field.Title !== 'Attachments') {
               console.log(`${field.Title} ---> this is true`);
               return true;
             } else {
@@ -51,6 +52,33 @@ export class SPService {
     //     console.log(f);
     //   });
     // return null;
+  }
+  public async createListItem(listid: string, valueMap: any): Promise<ItemAddResult> {
+    return new Promise<ItemAddResult>((resolve, reject) => {
+      // add an item to the list
+      sp.web.lists
+        .getById(listid)
+        .items.add(
+          valueMap
+          // {
+          //   Managed_x0020_Metadata_x0020_Fie: {
+          //     Label: 'Managed A',
+          //     TermGuid: 'c90ba38a-d4aa-4c78-b4ca-7d09c3a120a7',
+          //     WssId: '-1',
+          //   },
+          //   Lookup_x0020_FieldId: 1,
+          //   Title: 'Update MMD',
+          // }
+        )
+        .then((iar: ItemAddResult) => {
+          console.log(iar);
+          resolve(iar);
+        })
+        .catch(error => {
+          console.log(error);
+          reject(error);
+        });
+    });
   }
   // /**
   //  * Gets the schema for all relevant fields for a specified SharePoint list form.

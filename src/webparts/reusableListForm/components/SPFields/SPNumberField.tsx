@@ -10,15 +10,25 @@ export interface ISPNumberFieldProps extends ITextFieldProps {
   onChange?: any;
   errorMessage?: any;
 }
-export interface ISPNumberFieldFormState {}
+export interface ISPNumberFieldFormState {
+  value: string;
+  isNumber: boolean;
+}
 
 export default class SPNumberField extends React.Component<ISPNumberFieldProps, ISPNumberFieldFormState> {
+  constructor(props: ISPNumberFieldProps) {
+    super(props);
+    this.state = {
+      value: this.props.fieldSchema.DefaultValue,
+      isNumber: false,
+    };
+  }
   public render(): React.ReactElement<ISPNumberFieldProps> {
     return (
       <TextField
-        value={this.props.fieldSchema.DefaultValue}
+        value={this.state.value}
         required={this.props.fieldSchema.Required}
-        onChange={this.props.onChange}
+        onChange={this.onChange}
         onGetErrorMessage={this._validateNumber}
         placeholder={`Please enter a number`}
       />
@@ -26,7 +36,12 @@ export default class SPNumberField extends React.Component<ISPNumberFieldProps, 
   }
 
   private _validateNumber = (value: string): string => {
-    return isNaN(this.parseNumber(value)) ? `Only Numbers are allowed` : '';
+    let isValidNumber: boolean;
+    isValidNumber = isNaN(this.parseNumber(value));
+    this.setState({
+      isNumber: isValidNumber,
+    });
+    return isValidNumber ? `Only Numbers are allowed` : '';
   }
 
   private parseNumber = (value, locale = navigator.language) => {
@@ -38,5 +53,13 @@ export default class SPNumberField extends React.Component<ISPNumberFieldProps, 
     const cleaned = value.replace(cleanPattern, '');
     const normalized = cleaned.replace(decimalSperator, '.');
     return Number(normalized);
+  }
+  private onChange = ele => {
+    console.log(ele);
+    this.setState({
+      value: ele.target.value,
+    });
+    if (!this.state.isNumber) this.props.onChange(ele.target.value, this.props.fieldSchema.Title);
+    else this.props.onChange('', this.props.fieldSchema.Title);
   }
 }

@@ -13,7 +13,6 @@ export interface ISPMLTRichFieldProps extends IRichTextProps {
 export interface ISPMLTRichFieldFormState {
   value: string;
 }
-
 export default class SPMLTRichField extends React.Component<ISPMLTRichFieldProps, ISPMLTRichFieldFormState> {
   constructor(props: ISPMLTRichFieldProps) {
     super(props);
@@ -22,19 +21,14 @@ export default class SPMLTRichField extends React.Component<ISPMLTRichFieldProps
     };
   }
   public render(): React.ReactElement<ISPMLTRichFieldProps> {
-    return (
-      <RichText
-        // value={this.state.value ? this.state.value : ''}
-        isEditMode={true}
-        onChange={text => this.onTextChange(text)}
-      />
-    );
+    return <RichText className={styles.richMLT} value={this.state.value} onChange={text => this.onTextChange(text)} />;
   }
   private onTextChange = (newText: string) => {
     this.setState({
       value: newText,
     });
     console.log(newText);
+    this.props.onChange(newText, this.props.fieldSchema.Title);
     return newText;
   }
 }
