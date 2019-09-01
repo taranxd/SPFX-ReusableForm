@@ -1,7 +1,8 @@
-import {SPHttpClient} from '@microsoft/sp-http';
-import {ControlMode} from '../../../common/datatypes/ControlMode';
-import {IFieldConfiguration} from './IFieldConfiguration';
-import {WebPartContext} from '@microsoft/sp-webpart-base';
+import { SPHttpClient } from '@microsoft/sp-http';
+import { ControlMode } from '../../../common/datatypes/ControlMode';
+import { IFieldConfiguration } from './IFieldConfiguration';
+import { WebPartContext } from '@microsoft/sp-webpart-base';
+import { string } from 'prop-types';
 export interface IReusableListFormProps {
   title: string;
   description?: string;
@@ -17,4 +18,6 @@ export interface IReusableListFormProps {
   onSubmitFailed?(fieldErrors: any): void;
   onUpdateFields?(newFields: IFieldConfiguration[]): void;
   context: WebPartContext;
+  redirectUrl?: string;
+  postSaveCode?: string;
 }

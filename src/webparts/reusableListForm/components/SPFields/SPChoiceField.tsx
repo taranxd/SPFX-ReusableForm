@@ -1,8 +1,8 @@
 import * as React from 'react';
 import styles from '../ReusableListForm.module.scss';
-import {Dropdown, IDropdownProps, IDropdownOption} from 'office-ui-fabric-react/lib/';
-import {IFieldSchema} from '../../../../common/services/datatypes/RenderListData';
-import {ControlMode} from '@pnp/sp';
+import { Dropdown, IDropdownProps, IDropdownOption } from 'office-ui-fabric-react/lib/';
+import { IFieldSchema } from '../../../../common/services/datatypes/RenderListData';
+import { ControlMode } from '@pnp/sp';
 
 export interface ISPChoiceFieldProps extends IDropdownProps {
   fieldSchema: IFieldSchema;
@@ -20,7 +20,7 @@ export default class SPChoiceField extends React.Component<ISPChoiceFieldProps, 
     super(props);
     let options: IDropdownOption[] = [];
     this.props.fieldSchema.Choices.forEach(choice => {
-      options.push({key: choice, text: choice});
+      options.push({ key: choice, text: choice });
     });
     let selectedOption;
     options.forEach(choice => {
@@ -30,29 +30,27 @@ export default class SPChoiceField extends React.Component<ISPChoiceFieldProps, 
     });
     this.state = {
       options: options,
-      selectedOption: selectedOption,
+      selectedOption: selectedOption
     };
   }
   public render(): React.ReactElement<ISPChoiceFieldProps> {
     return (
-      <Dropdown
-        //placeHolder="Select an Option"
-        label=""
-        id="DropDownChoice"
-        selectedKey={this.state.selectedOption.key}
-        //selectedKey={dpselectedItem ? dpselectedItem.key : undefined}
-        //ariaLabel="Basic dropdown example"
-        options={this.state.options}
-        onChange={this._onChange}
-        //onFocus={this._log('onFocus called')}
-        //onBlur={this._log('onBlur called')}
-      />
+      <div id={this.props.fieldSchema.InternalName}>
+        <Dropdown
+          label=''
+          id={this.props.fieldSchema.InternalName}
+          selectedKey={this.state.selectedOption ? this.state.selectedOption.key : ''}
+          options={this.state.options}
+          onChange={this._onChange}
+          required={this.props.fieldSchema.Required}
+        />
+      </div>
     );
   }
   private _onChange = (ev: React.FormEvent<HTMLDivElement>, selectedItem: IDropdownOption) => {
     this.setState({
-      selectedOption: selectedItem,
+      selectedOption: selectedItem
     });
     this.props.onChange(selectedItem.text, this.props.fieldSchema.Title);
-  }
+  };
 }

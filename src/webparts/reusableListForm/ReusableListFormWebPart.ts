@@ -1,29 +1,18 @@
 import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import {Version, DisplayMode} from '@microsoft/sp-core-library';
-import {BaseClientSideWebPart} from '@microsoft/sp-webpart-base';
-import {
-  IPropertyPaneConfiguration,
-  PropertyPaneTextField,
-  PropertyPaneDropdown,
-  PropertyPaneToggle,
-} from '@microsoft/sp-property-pane';
+import { Version, DisplayMode } from '@microsoft/sp-core-library';
+import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
+import { IPropertyPaneConfiguration, PropertyPaneTextField, PropertyPaneDropdown, PropertyPaneToggle } from '@microsoft/sp-property-pane';
 
 import * as strings from 'ReusableListFormWebPartStrings';
 import ReusableListForm from './components/ReusableListForm';
-import {IReusableListFormProps} from './components/IReusableListFormProps';
+import { IReusableListFormProps } from './components/IReusableListFormProps';
 // import ListForm from './components/ListForm';
-import {
-  PropertyFieldListPicker,
-  PropertyFieldListPickerOrderBy,
-} from '@pnp/spfx-property-controls/lib/PropertyFieldListPicker';
-import {
-  PropertyFieldCodeEditor,
-  PropertyFieldCodeEditorLanguages,
-} from '@pnp/spfx-property-controls/lib/PropertyFieldCodeEditor';
-import {sp} from '@pnp/sp';
-import {ControlMode} from '../../common/datatypes/ControlMode';
-import {IFieldConfiguration} from './components/IFieldConfiguration';
+import { PropertyFieldListPicker, PropertyFieldListPickerOrderBy } from '@pnp/spfx-property-controls/lib/PropertyFieldListPicker';
+import { PropertyFieldCodeEditor, PropertyFieldCodeEditorLanguages } from '@pnp/spfx-property-controls/lib/PropertyFieldCodeEditor';
+import { sp } from '@pnp/sp';
+import { ControlMode } from '../../common/datatypes/ControlMode';
+import { IFieldConfiguration } from './components/IFieldConfiguration';
 export interface IReusableListFormWebPartProps {
   title: string;
   description: string;
@@ -34,13 +23,14 @@ export interface IReusableListFormWebPartProps {
   redirectUrl?: string;
   fields?: IFieldConfiguration[];
   jsCode?: string;
+  htmlCode: string;
 }
 
 export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReusableListFormWebPartProps> {
   public onInit(): Promise<void> {
     return super.onInit().then(_ => {
       sp.setup({
-        spfxContext: this.context,
+        spfxContext: this.context
       });
     });
   }
@@ -71,6 +61,8 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
         onSubmitSucceeded: (id: number) => this.formSubmitted(id),
         onUpdateFields: (fields: IFieldConfiguration[]) => this.updateField(fields),
         context: this.context,
+        redirectUrl: this.properties.redirectUrl,
+        postSaveCode: this.properties.htmlCode
       });
     } else {
       //configure webpart screen
@@ -88,11 +80,10 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
         onSubmitSucceeded: (id: number) => this.formSubmitted(id),
         onUpdateFields: (fields: IFieldConfiguration[]) => this.updateField(fields),
         context: this.context,
+        redirectUrl: this.properties.redirectUrl,
+        postSaveCode: this.properties.htmlCode
       });
     }
-    // const element: React.ReactElement<IReusableListFormProps> = React.createElement(ReusableListForm, {
-    //   description: this.properties.description
-    // });
     ReactDom.render(element, this.domElement);
   }
 
@@ -109,11 +100,11 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
       groupName: strings.BasicGroupName,
       groupFields: [
         PropertyPaneTextField('title', {
-          label: strings.TitleFieldLabel,
+          label: strings.TitleFieldLabel
         }),
         PropertyPaneTextField('description', {
           label: strings.DescriptionFieldLabel,
-          multiline: true,
+          multiline: true
         }),
         PropertyFieldListPicker('listId', {
           label: 'Select a list',
@@ -121,20 +112,20 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
           includeHidden: false,
           orderBy: PropertyFieldListPickerOrderBy.Title,
           disabled: false,
-          onPropertyChange: this.onPropertyPaneFieldChanged.bind(this),
+          onPropertyChange: this.onPropertyPaneFieldChanged,
           properties: this.properties,
           context: this.context,
           onGetErrorMessage: null,
           deferredValidationTime: 0,
-          key: 'listPickerFieldId',
+          key: 'listPickerFieldId'
         }),
         PropertyPaneDropdown('formType', {
           label: strings.FormTypeFieldLabel,
           options: Object.keys(ControlMode)
             .map(k => ControlMode[k])
             .filter(v => typeof v === 'string')
-            .map(n => ({key: ControlMode[n], text: n})),
-          disabled: !this.properties.listId,
+            .map(n => ({ key: ControlMode[n], text: n })),
+          disabled: !this.properties.listId
         }),
         PropertyFieldCodeEditor('htmlCode', {
           label: 'Edit JavaScript Code',
@@ -144,16 +135,16 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
           properties: this.properties,
           disabled: !this.properties.listId,
           key: 'codeEditorFieldId',
-          language: PropertyFieldCodeEditorLanguages.HTML,
-        }),
-      ],
+          language: PropertyFieldCodeEditorLanguages.JavaScript
+        })
+      ]
     };
     if (this.properties.formType !== ControlMode.New) {
       mainGroup.groupFields.push(
         PropertyPaneTextField('itemId', {
           label: strings.ItemIdFieldLabel,
           deferredValidationTime: 2000,
-          description: strings.ItemIdFieldDescription,
+          description: strings.ItemIdFieldDescription
         })
       );
     } else {
@@ -163,25 +154,25 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
     mainGroup.groupFields.push(
       PropertyPaneToggle('showUnsupportedFields', {
         label: strings.ShowUnsupportedFieldsLabel,
-        disabled: !this.properties.listId,
+        disabled: !this.properties.listId
       })
     );
     mainGroup.groupFields.push(
       PropertyPaneTextField('redirectUrl', {
         label: strings.RedirectUrlFieldLabel,
         description: strings.RedirectUrlFieldDescription,
-        disabled: !this.properties.listId,
+        disabled: !this.properties.listId
       })
     );
     return {
       pages: [
         {
           header: {
-            description: strings.PropertyPaneDescription,
+            description: strings.PropertyPaneDescription
           },
-          groups: [mainGroup],
-        },
-      ],
+          groups: [mainGroup]
+        }
+      ]
     };
   }
 
@@ -197,4 +188,12 @@ export default class ReusableListFormWebPart extends BaseClientSideWebPart<IReus
       window.location.href = this.properties.redirectUrl.replace('[ID]', id.toString());
     }
   }
+  /*   protected get disableReactivePropertyChanges(): boolean {
+    return false;
+  }
+  protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
+    console.log(`this is old Value objecy ${oldValue}`);
+    console.log(`this is new value object ${newValue}`);
+    // this.render();
+  } */
 }

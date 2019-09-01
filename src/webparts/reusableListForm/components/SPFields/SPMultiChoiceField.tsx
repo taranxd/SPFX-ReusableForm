@@ -1,11 +1,10 @@
 import * as React from 'react';
 import styles from '../ReusableListForm.module.scss';
-import {Dropdown, IDropdownProps, IDropdownOption} from 'office-ui-fabric-react/lib/';
-import {IFieldSchema} from '../../../../common/services/datatypes/RenderListData';
-import {ControlMode} from '@pnp/sp';
-import {PropertyFieldMultiSelect} from '@pnp/spfx-property-controls/lib/PropertyFieldMultiSelect';
+import { Dropdown, IDropdownProps, IDropdownOption, ShimmerElementsGroup } from 'office-ui-fabric-react/lib/';
+import { IFieldSchema } from '../../../../common/services/datatypes/RenderListData';
+import { ControlMode, DateTimeFieldFriendlyFormatType } from '@pnp/sp';
 
-export interface ISPChoiceFieldProps extends IDropdownProps {
+export interface ISPMultiChoiceFieldProps extends IDropdownProps {
   fieldSchema: IFieldSchema;
   formMode: ControlMode;
   onChange?: any;
@@ -13,51 +12,59 @@ export interface ISPChoiceFieldProps extends IDropdownProps {
 }
 export interface ISPMultiChoiceFieldFormState {
   options: IDropdownOption[];
-  selectedOption: IDropdownOption;
-  multiSelect: string[];
+  selectedKeys: any[];
 }
 
-export default class SPMultiChoiceField extends React.Component<ISPChoiceFieldProps, ISPMultiChoiceFieldFormState> {
-  constructor(props: ISPChoiceFieldProps) {
+export default class SPMultiChoiceField extends React.Component<ISPMultiChoiceFieldProps, ISPMultiChoiceFieldFormState> {
+  constructor(props: ISPMultiChoiceFieldProps) {
     super(props);
     let options: IDropdownOption[] = [];
-    let multiOptions = [];
     this.props.fieldSchema.Choices.forEach(choice => {
-      options.push({key: choice, text: choice});
+      options.push({ key: choice, text: choice });
     });
-    let selectedOption;
+    let selectedKeys = [];
     options.forEach(choice => {
       if (choice.key === this.props.fieldSchema.DefaultValue) {
-        selectedOption = choice;
-        multiOptions.push(choice.key);
+        selectedKeys.push(choice);
       }
     });
     this.state = {
       options: options,
-      selectedOption: selectedOption,
-      multiSelect: multiOptions,
+      selectedKeys: selectedKeys
     };
   }
-  public render(): React.ReactElement<ISPChoiceFieldProps> {
+  public render(): React.ReactElement<ISPMultiChoiceFieldProps> {
     return (
-      <Dropdown
-        //placeHolder="Select an Option"
-        label=""
-        id="DropDownChoice"
-        selectedKey={this.state.selectedOption.key}
-        //selectedKey={dpselectedItem ? dpselectedItem.key : undefined}
-        //ariaLabel="Basic dropdown example"
-        options={this.state.options}
-        onChange={this._onChange}
-        //onFocus={this._log('onFocus called')}
-        //onBlur={this._log('onBlur called')}
-      />
+      <div id={this.props.fieldSchema.InternalName}>
+        <Dropdown
+          label=''
+          id={this.props.fieldSchema.InternalName}
+          defaultSelectedKeys={this.state.selectedKeys.length > 0 ? this.state.selectedKeys : this.state.options}
+          options={this.state.options}
+          onChange={this._onChange}
+          required={this.props.fieldSchema.Required}
+          multiSelect
+        />
+      </div>
     );
   }
   private _onChange = (ev: React.FormEvent<HTMLDivElement>, selectedItem: IDropdownOption) => {
+    let tempKeys = this.state.selectedKeys;
+    if (selectedItem.selected) {
+      tempKeys.push(selectedItem.key);
+    } else {
+      tempKeys = tempKeys.filter(item => {
+        if (item === selectedItem.key) {
+          return false;
+        } else {
+          return true;
+        }
+      });
+    }
+    console.log(tempKeys);
     this.setState({
-      selectedOption: selectedItem,
+      selectedKeys: tempKeys
     });
     this.props.onChange(selectedItem.text, this.props.fieldSchema.Title);
-  }
+  };
 }
